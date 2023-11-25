@@ -38,7 +38,7 @@
 
 #define KT_PAGE_SIZE (sysconf(_SC_PAGE_SIZE))
 #define KT_PAGE_START(x) (uintptr_t(x) & ~(KT_PAGE_SIZE - 1))
-#define KT_PAGE_END(x) (KT_PAGE_START(x + KT_PAGE_SIZE - 1))
+#define KT_PAGE_END(x) (KT_PAGE_START(uintptr_t(x) + KT_PAGE_SIZE - 1))
 #define KT_PAGE_OFFSET(x) (uintptr_t(x) - KT_PAGE_START(x))
 #define KT_PAGE_LEN(x) (size_t(KT_PAGE_SIZE - KT_PAGE_OFFSET(x)))
 
@@ -97,23 +97,31 @@ namespace KittyUtils
     std::string fileDirectory(const std::string &filePath);
     std::string fileExtension(const std::string &filePath);
 
-    static inline bool string_startswith(const std::string &str, const std::string &str2)
+    namespace String
     {
-        return str.length() >= str2.length() && str.compare(0, str2.length(), str2) == 0;
-    }
+        static inline bool StartsWith(const std::string &str, const std::string &str2)
+        {
+            return str.length() >= str2.length() && str.compare(0, str2.length(), str2) == 0;
+        }
+        
+        static inline bool Contains(const std::string &str, const std::string &str2)
+        {
+            return str.length() >= str2.length() && str.find(str2) != std::string::npos;
+        }
+        
+        static inline bool EndsWith(const std::string &str, const std::string &str2)
+        {
+            return str.length() >= str2.length() && str.compare(str.length() - str2.length(), str2.length(), str2) == 0;
+        }
+        
+        void Trim(std::string &str);
 
-    static inline bool string_contains(const std::string &str, const std::string &str2)
-    {
-        return str.length() >= str2.length() && str.find(str2) != std::string::npos;
-    }
+        bool ValidateHex(std::string &hex);
 
-    static inline bool string_endswith(const std::string &str, const std::string &str2)
-    {
-        return str.length() >= str2.length() && str.compare(str.length() - str2.length(), str2.length(), str2) == 0;
-    }
+        std::string Fmt(const char *fmt, ...);
 
-    void trim_string(std::string &str);
-    bool validateHexString(std::string &hex);
+        std::string Random(size_t length);
+    } // namespace String
 
     template <typename T>
     T randInt(T min, T max)
@@ -125,10 +133,6 @@ namespace KittyUtils
 
         return dist(gen, param_type{min, max});
     }
-
-    std::string random_string(size_t length);
-
-    std::string strfmt(const char *fmt, ...);
 
     template <typename T>
     std::string data2Hex(const T &data)
